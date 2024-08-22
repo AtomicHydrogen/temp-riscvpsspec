@@ -1,0 +1,143 @@
+package pBoxTB;
+    `include "decoder.defines"
+    import topLevelMod::*;
+    import decoder::*;
+
+    typedef enum {READY, RUN, END} State deriving (Bits, Eq);
+
+
+    (*synthesize*)
+    module mkTb (Empty);
+
+        Reg#(State) tbState <- mkReg(READY);
+        Reg#(int)      ctr  <- mkReg(1);
+        Reg#(Bool)    dispT <- mkReg(True);
+        PBoxIfc dut <- mkPBox;
+
+
+        rule start(tbState == READY);
+            Bit#(10) instr = `SRA16;
+            Bit#(64) rs1 = 0, rs2 = 0;
+            Bit#(5) ctrl = 0;
+            case(ctr) matches
+            1: begin
+               instr = `SRA16;
+               rs1 = {16'h8000,16'h7FFF, -16'd10, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, 16'd15};
+            end
+            
+            2: begin
+                instr = `SRAI16;
+                rs1 = {16'd5,16'd0, 16'd1, -16'd15};
+                rs2 = {16'd10,16'd5,16'd0, 16'd5};
+                ctrl = 5'd5;
+            end
+
+            3: begin
+                 instr = `SRA16du;
+                 rs1 = {16'h8000,16'h7FFF, -16'd10, 16'd10};
+                  rs2 = {16'd10,16'd5,16'd0, 16'd4};
+            end
+
+            4: begin
+                  instr = `SRAI16du;
+                   rs1 = {16'd5,16'd0, 16'd1, -16'd15};
+                   rs2 = {16'd10,16'd5,16'd0, 16'd0}; 
+                   ctrl = 5'd4;
+            end
+
+            5: begin
+                    instr = `SRL16;
+                    rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                    rs2 = {16'd10,16'd5,16'd0, 16'd5};
+            end
+
+            6: begin
+                    instr = `SRLI16;
+                    rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                    rs2 = {16'd10,16'd5,16'd0, 16'd5};
+                     ctrl = 5'd4;
+            end
+
+            7: begin
+                     instr = `SRL16du;
+                     rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                     rs2 = {16'd10,16'd5,16'd0, 16'd5};
+
+            end
+
+            8: begin
+                instr = `SRLI16du;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, 16'd5};
+                ctrl = 5'd4;
+            end
+
+            9: begin
+                instr = `SLL16;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, -16'd5};
+            end
+
+            10: begin
+                instr = `SLLI16;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, 16'd0};
+                ctrl = 5'd15;
+            end
+
+            11: begin
+                instr = `KSLL16;
+                rs1 = {16'hfff,-16'd1, 16'd30, -16'd50};
+                rs2 = {16'd10,16'd5,16'd0, 16'd12};
+            end
+
+            12: begin
+                instr = `KSLLI16;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, 16'd0};
+                ctrl = 5'd15;
+            end
+
+            13: begin
+                instr = `KSLRA16;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, -16'd3};
+            end
+
+            14: begin
+                instr = `KSLRA16du;
+                rs1 = {16'hfff,16'h8000, -16'd1, 16'd10};
+                rs2 = {16'd10,16'd5,16'd0, 16'd5};
+            end
+            endcase
+            dut.inp(rs1,rs2,ctrl,instr);
+            tbState <= RUN;
+        endrule
+
+        rule print(tbState == RUN);
+
+        Bit#(64) result <- (dut.outp);
+        if(dispT == True) begin
+            
+            Int#(16) i1 = unpack(result[63:48]);
+            Int#(16) i2 = unpack(result[47:32]);
+            Int#(16) i3 = unpack(result[31:16]);
+            Int#(16) i4 = unpack(result[15:0]);
+            $display("Ans: %d, %d, %d, %d", i1,i2,i3,i4);
+        end else $display("Ans: %d, %d, %d, %d", result[63:48],result[47:32], result[31:16], result[15:0]);
+
+        if(ctr == 29) begin
+            tbState <= END;
+            $finish(0);
+        end
+        else begin
+            ctr <= ctr + 1;
+            tbState <= READY;
+        end
+        
+    endrule
+
+    endmodule
+
+endpackage

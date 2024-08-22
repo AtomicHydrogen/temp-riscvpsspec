@@ -1,0 +1,203 @@
+package pBoxTB;
+    `include "decoder.defines"
+    import topLevelMod::*;
+    import decoder::*;
+
+    typedef enum {READY, RUN, END} State deriving (Bits, Eq);
+
+
+    (*synthesize*)
+    module mkTb (Empty);
+
+        Reg#(State) tbState <- mkReg(READY);
+        Reg#(int)      ctr  <- mkReg(0);
+        Reg#(Bool)    dispT <- mkReg(True);
+        PBoxIfc dut <- mkPBox;
+
+
+        rule start(tbState == READY);
+            Bit#(10) instr = `ADD32;
+            Bit#(64) rs1 = 0, rs2 = 0;
+            case(ctr) matches
+            0: begin 
+                 instr = `ADD32;
+                rs1 = {32'd2,32'd15};
+                rs2 = {32'd10,32'd67};
+                dispT       <= False; end
+            1: begin
+                 instr = `RADD32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= True; end
+            2: begin 
+                 instr = `URADD32;
+                rs1 = {32'd2,32'd1};
+                rs2 = {32'd10,32'd9};
+                dispT       <= False; end
+            3: begin 
+                 instr = `KADD32;
+                rs1 = {32'h7FFFFFFF,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= True; end
+            4: begin
+                 instr = `UKADD32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= False; end
+            5: begin 
+                 instr = `SUB32;
+                rs1 = {32'd10,32'd2};
+                rs2 = {32'd2,-32'd10};
+                dispT       <= False; end
+            6: begin 
+                 instr = `RSUB32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= True; end
+            7: begin
+                 instr = `URSUB32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= False; end
+            8: begin 
+                 instr = `KSUB32;
+                rs1 = {32'hFFFFFFFF,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= True; end
+            9: begin 
+                 instr = `UKSUB32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= False; end
+            10: begin
+                 instr = `CRAS32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {-32'd10,-32'd10};
+                dispT       <= False; end
+            11: begin
+                 instr = `RCRAS32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,32'd10};
+                dispT       <= True; end
+            12: begin
+                 instr = `URCRAS32;
+                rs1 = {32'd5,32'd5};
+                rs2 = {32'd10,32'd10};
+                dispT       <= False; end
+            13: begin
+                 instr = `KCRAS32;
+                rs1 = {32'h7FFFFFFF,-32'd10};
+                rs2 = {32'h7FFFFFFF,32'd10};
+                dispT       <= True; end
+            14: begin
+                 instr = `UKCRAS32;
+                rs1 = {32'd5,32'd5};
+                rs2 = {32'd10,32'd10};
+                dispT       <= False; end
+            15: begin
+                 instr = `CRSA32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {-32'd10,-32'd10};
+                dispT       <= False; end
+            16: begin
+                 instr = `RCRSA32;
+                rs1 = {32'd5,32'd5};
+                rs2 = {32'd10,32'd10};
+                dispT       <= True; end
+            17: begin
+                 instr = `URCRSA32;
+                rs1 = {32'd2,32'd2};
+                rs2 = {32'd10,32'd10};
+                dispT       <= False; end
+            18: begin
+                 instr = `KCRSA32;
+                rs1 = {32'h7FFFFFFF,32'h80000000};
+                rs2 = {-32'd10,-32'd10};
+                dispT       <= True; end
+            19: begin
+                 instr = `UKCRSA32;
+                rs1 = {32'hFFFFFFFF,32'hFFFFFFFF};
+                rs2 = {32'd10,-32'd10};
+                dispT       <= False; end
+            20: begin
+                instr = `STAS32;
+               rs1 = {32'd2,32'd2};
+               rs2 = {-32'd10,-32'd10};
+               dispT       <= False; end
+            21: begin
+                instr = `RSTAS32;
+               rs1 = {32'd2,32'd2};
+               rs2 = {32'd10,32'd10};
+               dispT       <= True; end
+            22: begin
+                instr = `URSTAS32;
+               rs1 = {32'd5,32'd5};
+               rs2 = {32'd10,32'd10};
+               dispT       <= False; end
+            23: begin
+                instr = `KSTAS32;
+               rs1 = {32'h7FFFFFFF,-32'd10};
+               rs2 = {32'h7FFFFFFF,32'd10};
+               dispT       <= True; end
+            24: begin
+                instr = `UKSTAS32;
+               rs1 = {32'd5,32'd5};
+               rs2 = {32'd10,32'd10};
+               dispT       <= False; end
+            25: begin
+                instr = `STSA32;
+               rs1 = {32'd2,32'd2};
+               rs2 = {-32'd10,-32'd10};
+               dispT       <= False; end
+            26: begin
+                instr = `RSTSA32;
+               rs1 = {32'd5,32'd5};
+               rs2 = {32'd10,32'd10};
+               dispT       <= True; end
+            27: begin
+                instr = `URSTSA32;
+               rs1 = {32'd2,32'd2};
+               rs2 = {32'd10,32'd10};
+               dispT       <= False; end
+            28: begin
+                instr = `KSTSA32;
+               rs1 = {32'h7FFFFFFF,32'h80000000};
+               rs2 = {-32'd10,-32'd10};
+               dispT       <= True; end
+            29: begin
+                instr = `UKSTSA32;
+               rs1 = {32'hFFFFFFFF,32'hFFFFFFFF};
+               rs2 = {32'd10,-32'd10};
+               dispT       <= False; end
+            
+            endcase
+            dut.inp(rs1,rs2,5'b0,instr);
+            tbState <= RUN;
+        endrule
+
+        rule print(tbState == RUN);
+
+            Bit#(64) result <- (dut.outp);
+            if(dispT == True) begin
+                
+                Int#(32) i1 = unpack(result[63:32]);
+                Int#(32) i2 = unpack(result[31:0]);
+                $display("Ans: %d, %d", i1,i2);
+            end else $display("Ans: %d, %d", result[63:32],result[31:0]);
+
+            if(ctr == 29) begin
+                tbState <= END;
+                $finish(0);
+            end
+            else begin
+                ctr <= ctr + 1;
+                tbState <= READY;
+            end
+            
+            
+
+        endrule
+
+    endmodule
+
+endpackage

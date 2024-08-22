@@ -1,0 +1,147 @@
+package pBoxTB;
+    `include "decoder.defines"
+    import topLevelMod::*;
+    import decoder::*;
+
+    typedef enum {READY, RUN, END} State deriving (Bits, Eq);
+
+
+    (*synthesize*)
+    module mkTb (Empty);
+
+        Reg#(State) tbState <- mkReg(READY);
+        Reg#(int)      ctr  <- mkReg(1);
+        Reg#(Bool)    dispT <- mkReg(True);
+        PBoxIfc dut <- mkPBox;
+
+
+        rule start(tbState == READY);
+            Bit#(10) instr = `SRA8;
+            Bit#(64) rs1 = 0, rs2 = 0;
+            Bit#(5) ctrl = 0;
+            case(ctr) matches
+            1: begin
+               instr = `SRA8;
+               rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+               rs2 = {56'd0,8'd5};
+            end
+            
+            2: begin
+                instr = `SRAI8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+                ctrl = 5'd4;
+            end
+
+            3: begin
+                 instr = `SRA8du;
+                 rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                 rs2 = {56'd0,8'd5};
+            end
+
+            4: begin
+                  instr = `SRAI8du;
+                  rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                   rs2 = {56'd0,8'd5}; 
+                   ctrl = 5'd0;
+            end
+
+            5: begin
+                    instr = `SRL8;
+                    rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                    rs2 = {56'd0,8'd5};
+            end
+
+            6: begin
+                    instr = `SRLI8;
+                    rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                    rs2 = {56'd0,8'd5};
+                     ctrl = 5'd4;
+            end
+
+            7: begin
+                     instr = `SRL8du;
+                     rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                     rs2 = {56'd0,8'd5};
+
+            end
+
+            8: begin
+                instr = `SRLI8du;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+                ctrl = 5'd0;
+            end
+
+            9: begin
+                instr = `SLL8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+            end
+
+            10: begin
+                instr = `SLLI8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+                ctrl = 5'd15;
+            end
+
+            11: begin
+                instr = `KSLL8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+            end
+
+            12: begin
+                instr = `KSLLI8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+                ctrl = 5'd0;
+            end
+
+            13: begin
+                instr = `KSLRA8;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,8'd5};
+            end
+
+            14: begin
+                instr = `KSLRA8du;
+                rs1 = {8'd67, -8'd5,8'd0,8'd90,8'hFF, 8'h7F, -8'd10, 8'd10};
+                rs2 = {56'd0,-8'd5};
+            end
+            endcase
+            dut.inp(rs1,rs2,ctrl,instr);
+            tbState <= RUN;
+        endrule
+
+        rule print(tbState == RUN);
+
+        Bit#(64) result <- (dut.outp);
+        if(dispT == True) begin
+            
+            Int#(8) i1 = unpack(result[63:56]);
+            Int#(8) i3 = unpack(result[47:40]);
+            Int#(8) i5 = unpack(result[31:24]);
+            Int#(8) i7 = unpack(result[15:8]);
+            Int#(8) i2 = unpack(result[55:48]);
+            Int#(8) i4 = unpack(result[39:32]);
+            Int#(8) i6 = unpack(result[23:16]);
+            Int#(8) i8 = unpack(result[7:0]);
+            $display("Ans: %d, %d, %d, %d, %d, %d, %d, %d", i1,i2,i3,i4,i5,i6,i7,i8);
+        end else $display("Ans: %d, %d, %d, %d, %d, %d, %d, %d", result[63:56],result[55:48],result[47:40],result[39:32],result[31:24],result[23:16],result[15:8],result[7:0]);
+
+        if(ctr == 14) begin
+            tbState <= END;
+            $finish(0);
+        end
+        else begin
+            ctr <= ctr + 1;
+            tbState <= READY;
+        end
+        
+    endrule
+
+    endmodule
+
+endpackage

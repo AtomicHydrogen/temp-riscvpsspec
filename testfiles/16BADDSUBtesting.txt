@@ -1,0 +1,204 @@
+package pBoxTB;
+    `include "decoder.defines"
+    import topLevelMod::*;
+    import decoder::*;
+
+    typedef enum {READY, RUN, END} State deriving (Bits, Eq);
+
+
+    (*synthesize*)
+    module mkTb (Empty);
+
+        Reg#(State) tbState <- mkReg(READY);
+        Reg#(int)      ctr  <- mkReg(0);
+        Reg#(Bool)    dispT <- mkReg(True);
+        PBoxIfc dut <- mkPBox;
+
+
+        rule start(tbState == READY);
+            Bit#(10) instr = `ADD16;
+            Bit#(64) rs1 = 0, rs2 = 0;
+            case(ctr) matches
+            0: begin 
+                 instr = `ADD16;
+                rs1 = {16'd2,16'd15, 16'd1, 16'd2};
+                rs2 = {16'd10,16'd67, 16'd3, 16'd4};
+                dispT       <= False; end
+            1: begin
+                 instr = `RADD16;
+                rs1 = {16'd2,16'd2, 16'h7FFF, 16'd5};
+                rs2 = {16'd10,-16'd10, -16'd1, 16'h8000};
+                dispT       <= True; end
+            2: begin 
+                 instr = `URADD16;
+                rs1 = {16'd2,16'd1, 16'd24, 16'd0};
+                rs2 = {16'd10,16'd9, 16'd0, 16'd14};
+                dispT       <= False; end
+            3: begin 
+                 instr = `KADD16;
+                rs1 = {16'h7FFF,16'd2, 16'h8000, 16'h8000};
+                rs2 = {16'd10,-16'd10, 16'h7FFF, 16'hB000};
+                dispT       <= True; end
+            4: begin
+                 instr = `UKADD16;
+                rs1 = {16'd2,16'd2, 16'hFFFF, 16'd0};
+                rs2 = {16'd10,-16'd10, 16'd1, 16'd12};
+                dispT       <= False; end
+            5: begin 
+                 instr = `SUB16;
+                rs1 = {16'd10,16'd2, 16'd12, 16'h7FFF};
+                rs2 = {16'd2,-16'd10, 16'd23, 16'h8000};
+                dispT       <= False; end
+            6: begin 
+                 instr = `RSUB16;
+                rs1 = {16'd10,16'd2, 16'd12, 16'h7FFF};
+                rs2 = {16'd2,-16'd10, 16'd23, 16'h8000};
+                dispT       <= True; end
+            7: begin
+                 instr = `URSUB16;
+                rs1 = {16'd2,16'd2, 16'd0, 16'd16};
+                rs2 = {16'd10,-16'd10, 16'd12, 16'd14};
+                dispT       <= False; end
+            8: begin 
+                 instr = `KSUB16;
+                rs1 = {16'd0,16'd2, 16'h7FFF, 16'h8000};
+                rs2 = {16'd10,-16'd10, -16'd1, -16'd1};
+                dispT       <= True; end
+            9: begin 
+                 instr = `UKSUB16;
+                rs1 = {16'd2,16'd2, 16'hFFFF, 16'd1};
+                rs2 = {16'd10,-16'd10, -16'd1, 16'hFFF0};
+                dispT       <= False; end
+            10: begin
+                 instr = `CRAS16;
+                rs1 = {16'd2,16'd2, 16'd1, 16'd2};
+                rs2 = {-16'd10,-16'd10, 16'd1, 16'd2};
+                dispT       <= False; end
+            11: begin
+                 instr = `RCRAS16;
+                rs1 = {16'd2,16'd2, 16'd5, 16'd5};
+                rs2 = {16'd10,16'd10, 16'd20, 16'd20};
+                dispT       <= True; end
+            12: begin
+                 instr = `URCRAS16;
+                rs1 = {16'd5,16'd5, 16'd15, 16'd10};
+                rs2 = {16'd10,16'd10, -16'd15, 16'd10};
+                dispT       <= False; end
+            13: begin
+                 instr = `KCRAS16;
+                rs1 = {16'h7FFF,-16'd10, 16'h7FFF, 16'h7FFF};
+                rs2 = {16'h7FFF,16'd10, 16'h8000, 16'h8000};
+                dispT       <= True; end
+            14: begin
+                 instr = `UKCRAS16;
+                rs1 = {16'd5,16'd5, 16'hFFFF, 16'd0};
+                rs2 = {16'd10,16'd10, 16'd1, 16'd1};
+                dispT       <= False; end
+            15: begin
+                instr = `CRSA16;
+               rs1 = {16'd2,16'd2, 16'd1, 16'd2};
+               rs2 = {-16'd10,-16'd10, 16'd1, 16'd2};
+               dispT       <= False; end
+            16: begin
+                instr = `RCRSA16;
+               rs1 = {16'd2,16'd2, 16'd5, 16'd5};
+               rs2 = {16'd10,16'd10, 16'd20, 16'd20};
+               dispT       <= True; end
+            17: begin
+                instr = `URCRSA16;
+               rs1 = {16'd5,16'd5, 16'd15, 16'd10};
+               rs2 = {16'd10,16'd10, 16'd15, -16'd20};
+               dispT       <= False; end
+            18: begin
+                instr = `KCRSA16;
+               rs1 = {16'h7FFF,16'd10, 16'h7FFF, 16'h7FFF};
+               rs2 = {16'h7FFF,-16'd10, 16'h8000, 16'h8000};
+               dispT       <= True; end
+            19: begin
+                instr = `UKCRSA16;
+               rs1 = {16'd5,16'd5, 16'd0, 16'hFFFF};
+               rs2 = {16'd10,16'd10, 16'd1, 16'd1};
+               dispT       <= False; end
+            20: begin
+                instr = `STAS16;
+               rs1 = {16'd2,16'd2, -16'd5, -16'd10};
+               rs2 = {-16'd10,-16'd10, 16'd10, 16'd10};
+               dispT       <= False; end
+            21: begin
+                instr = `RSTAS16;
+               rs1 = {16'd2,16'd2, -16'd5, -16'd10};
+               rs2 = {16'd10,16'd10, 16'd10, 16'd10};
+               dispT       <= True; end
+            22: begin
+                instr = `URSTAS16;
+               rs1 = {16'd5,16'd5, 16'hFFFF, 16'hFFFF};
+               rs2 = {16'd10,16'd10, 16'd10, 16'd5};
+               dispT       <= False; end
+            23: begin
+                instr = `KSTAS16;
+               rs1 = {16'h7FFF,-16'd10, 16'h7FFF, -16'h7FFF};
+               rs2 = {16'h7FFF,16'd10, 16'd10, 16'd5};
+               dispT       <= True; end
+            24: begin
+                instr = `UKSTAS16;
+               rs1 = {16'd5,16'd5, 16'hFFFF, 16'd0};
+               rs2 = {16'd10,16'd10, -16'd10, 16'd1};
+               dispT       <= False; end
+            25: begin
+               instr = `STSA16;
+              rs1 = {16'd2,16'd2, -16'd5, -16'd10};
+              rs2 = {-16'd10,-16'd10, -16'd10, 16'd10};
+              dispT       <= False; end
+            26: begin
+               instr = `RSTSA16;
+              rs1 = {16'd2,16'd2, -16'd5, -16'd10};
+              rs2 = {16'd10,16'd10, -16'd10, 16'd10};
+              dispT       <= True; end
+            27: begin
+               instr = `URSTSA16;
+              rs1 = {16'd5,16'd5, 16'hFFFF, 16'hFFFF};
+              rs2 = {16'd10,16'd10, 16'd10, 16'd5};
+              dispT       <= False; end
+            28: begin
+               instr = `KSTSA16;
+              rs1 = {16'h7FFF,-16'd10, -16'h7FFF, 16'h7FFF};
+              rs2 = {16'h7FFF,16'd10, 16'd10, 16'd5};
+              dispT       <= True; end
+            29: begin
+               instr = `UKSTSA16;
+              rs1 = {16'd5,16'd5, 16'hFFFF, 16'd0};
+              rs2 = {16'd10,16'd10, -16'd10, 16'd1};
+              dispT       <= False; end
+            endcase
+            dut.inp(rs1,rs2,5'b0,instr);
+            tbState <= RUN;
+        endrule
+
+        rule print(tbState == RUN);
+
+            Bit#(64) result <- (dut.outp);
+            if(dispT == True) begin
+                
+                Int#(16) i1 = unpack(result[63:48]);
+                Int#(16) i2 = unpack(result[47:32]);
+                Int#(16) i3 = unpack(result[31:16]);
+                Int#(16) i4 = unpack(result[15:0]);
+                $display("Ans: %d, %d, %d, %d", i1,i2,i3,i4);
+            end else $display("Ans: %d, %d, %d, %d", result[63:48],result[47:32], result[31:16], result[15:0]);
+
+            if(ctr == 29) begin
+                tbState <= END;
+                $finish(0);
+            end
+            else begin
+                ctr <= ctr + 1;
+                tbState <= READY;
+            end
+            
+            
+
+        endrule
+
+    endmodule
+
+endpackage
